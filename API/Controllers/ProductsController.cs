@@ -2,6 +2,8 @@
 using Core.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces;
+using Core.Spicifications;
 
 namespace API.Controllers
 {
@@ -9,24 +11,46 @@ namespace API.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly StoreContext _context;
+        private readonly IGenericRepository<Product> _productRepo;
+        private readonly IGenericRepository<ProductBrand> _brandRepo;
+        private readonly IGenericRepository<ProductType> _prosuctTypeRepo;
 
-        public ProductsController(StoreContext context)
+        public ProductsController(IGenericRepository<Product> productRepo,
+                                  IGenericRepository<ProductBrand> brandRepo,
+                                  IGenericRepository<ProductType> prosuctTypeRepo)
         {
-            this._context = context;
+            this._productRepo = productRepo;
+            this._brandRepo = brandRepo;
+            this._prosuctTypeRepo = prosuctTypeRepo;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Product>>> GetProducts()
         {
-            var products =await _context.Products.ToListAsync();
+            var spec = new ProductWithTypeAndBrandSpicification();
+            var products =await _productRepo.ListAsync(spec);
             return Ok(products);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProducts(int id)
+        public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            return await _context.Products.FindAsync(id);
+            return await _productRepo.GetByIdAsync(id);
         }
+
+
+        [HttpGet("barnd")]
+        public async Task<ActionResult<ProductBrand>> GetProductsBarnd()
+        {
+            return Ok( await _brandRepo.GetAllAsync());
+        }
+
+
+        [HttpGet("type")]
+        public async Task<ActionResult<ProductBrand>> GetProductsType()
+        {
+            return Ok(await _prosuctTypeRepo.GetAllAsync());
+        }
+
     }
 }
